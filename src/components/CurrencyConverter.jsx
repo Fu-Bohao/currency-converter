@@ -7,18 +7,37 @@ function CurrencyConverter() {
   const { fromCurrency, toCurrency } = useContext(CurrencyContext);
 
   useEffect(() => {
-    // // ACTUAL CODE
-    // fetch(`https://v6.exchangerate-api.com/v6/---/pair/${fromCurrency}/${toCurrency}/${amount}`, {
-    //     method: "GET",
-    //     headers: {
-    //         'Content-Type': 'application/json'
-    //     }
-    // }).then(response => response.json())
-    //     .then(data => setOutput(data.conversion_result))
-    //     .catch(err => console.log(err))
+    if (amount === "" || isNaN(amount) || amount <= 0) {
+      setOutput(0); 
+      return;
+    }
 
-    // // FOR TESTING
-    setOutput(amount * 2);
+    const fetchConversion = async () => {
+      try {
+        const response = await fetch(
+          `https://v6.exchangerate-api.com/v6/5909da65d56037632ad205d8/pair/${fromCurrency}/${toCurrency}`,
+          {
+            method: "GET",
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch conversion rate");
+        }
+
+        const data = await response.json();
+        const conversionRate = data.conversion_rate || 0;
+        setOutput(amount * conversionRate); 
+      } catch (error) {
+        console.error("Error fetching conversion rate:", error);
+        setOutput(0); 
+      }
+    };
+
+    fetchConversion();
   }, [fromCurrency, toCurrency, amount]);
 
   const handleAmountChange = useCallback((event) => {
